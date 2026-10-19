@@ -53,9 +53,19 @@ public class CourseService {
         return toResponse(c);
     }
 
+    @Transactional
+    public CourseResponse reactivate(Long id) {
+        Course c = courseRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+        c.setActive(true);
+        return toResponse(c);
+    }
+
     private void apply(Course c, CourseRequest r) {
-        c.setCode(r.code().trim().toUpperCase()); c.setName(r.name().trim());
-        c.setLevel(r.level()); c.setDurationMonths(r.durationMonths()); c.setTotalFee(r.totalFee());
+        c.setCode(r.code().trim().toUpperCase());
+        c.setName(r.name().trim());
+        c.setLevel(r.level());
+        c.setDurationMonths(r.durationMonths());
+        c.setTotalFee(r.totalFee());
     }
 
     private CourseResponse toResponse(Course c) {

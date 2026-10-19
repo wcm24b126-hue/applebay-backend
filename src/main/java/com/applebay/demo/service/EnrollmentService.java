@@ -19,16 +19,29 @@ public class EnrollmentService {
 
     @Transactional
     public EnrollmentResponse enroll(EnrollmentRequest req) {
-        Student student = studentRepository.findById(req.studentId()).orElseThrow(() -> new ResourceNotFoundException("Student not found"));
-        Course course = courseRepository.findById(req.courseId()).orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+        Student student = studentRepository.findById(req.studentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + req.studentId()));
+        Course course = courseRepository.findById(req.courseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + req.courseId()));
 
-        if (!course.isActive()) throw new BusinessRuleException("Course is not active");
-        String batch = req.batch().trim().toUpperCase();
-        if (enrollmentRepository.existsByStudentIdAndCourseIdAndBatchIgnoreCase(student.getId(), course.getId(), batch)) {
-            throw new DuplicateResourceException("Student already enrolled in this course and batch");
+        if (!course.isActive()) {
+            throw new BusinessRuleException("Cannot enroll into an inactive course: " + course.getName());
         }
 
-        Enrollment e = new Enrollment(); e.setStudent(student); e.setCourse(course); e.setBatch(batch);
+        String normalizedBatch = req.batch().trim().toUpperCase();
+
+        // FR05: Check if already enrolled in the exact same course and batch
+        if (enrollmentRepository.existsByStudentIdAndCourseIdAndBatchIgnoreCase(student.getId(), course.getId(), normalizedBatch)) {
+            throw new DuplicateResourceException(
+                "Student (" + student.getStudentNumber() + ") is already enrolled in " + course.getCode() + " for batch " + normalizedBatch
+            );
+        }
+
+        Enrollment e = new Enrollment();
+        e.setStudent(student);
+        e.setCourse(course);
+        e.setBatch(normalizedBatch);
+        
         return toResponse(enrollmentRepository.save(e));
     }
 
@@ -37,6 +50,16 @@ public class EnrollmentService {
     }
 
     private EnrollmentResponse toResponse(Enrollment e) {
-        return new EnrollmentResponse(e.getId(), e.getStudent().getId(), e.getStudent().getStudentNumber(), e.getStudent().getFirstName() + " " + e.getStudent().getLastName(), e.getCourse().getId(), e.getCourse().getCode(), e.getCourse().getName(), e.getBatch(), e.getEnrolledOn());
+        return new EnrollmentResponse(
+            e.getId(),
+            e.getStudent().getId(),
+            e.getStudent().getStudentNumber(),
+            e.getStudent().getFirstName() + " " + e.getStudent().getLastName(),
+            e.getCourse().getId(),
+            e.getCourse().getCode(),
+            e.getCourse().getName(),
+            e.getBatch(),
+            e.getEnrolledOn()
+        );
     }
 }

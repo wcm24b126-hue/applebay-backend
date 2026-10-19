@@ -1,6 +1,5 @@
-HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
@@ -24,11 +23,8 @@ target/
 /nbbuild/
 /dist/
 /nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+/.nb-cache/
 
-### VS Code ###
-.vscode/
-target/
+### System ###
+.DS_Store
+Thumbs.db
